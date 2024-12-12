@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> <!-- Указывает кодировку страницы, чтобы текст отображался корректно -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Адаптирует страницу для мобильных устройств -->
+    <title>Продукты питания</title> <!-- Заголовок страницы -->
+    <style>
+        /* Стили для таблицы */
+        table {
+            width: 100%; /* Таблица занимает всю ширину контейнера */
+            border-collapse: collapse; /* Убирает двойные границы между ячейками */
+        }
+        th, td {
+            border: 1px solid #ddd; /* Граница ячеек */
+            padding: 8px; /* Отступ внутри ячеек */
+            text-align: left; /* Текст выравнивается по левому краю */
+        }
+        th {
+            background-color: #f4f4f4; /* Фон для заголовков таблицы */
+            cursor: pointer; /* Курсор меняется на указатель при наведении */
+        }
+        #filter {
+            margin-bottom: 10px; /* Отступ снизу для поля фильтрации */
+            padding: 5px; /* Внутренний отступ поля */
+            width: 200px; /* Ширина поля фильтрации */
+        }
+    </style>
+</head>
+<body>
+    <h1>Продукты питания</h1> <!-- Заголовок страницы -->
+    <input type="text" id="filter" placeholder="Фильтр по категории..."> <!-- Поле для ввода текста фильтрации -->
+    <table id="productTable"> <!-- Таблица для отображения данных -->
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">Название</th> <!-- Заголовок столбца "Название" с возможностью сортировки -->
+                <th onclick="sortTable(1)">Категория</th> <!-- Заголовок столбца "Категория" с возможностью сортировки -->
+                <th onclick="sortTable(2)">Цена</th> <!-- Заголовок столбца "Цена" с возможностью сортировки -->
+                <th onclick="sortTable(3)">Калории</th> <!-- Заголовок столбца "Калории" с возможностью сортировки -->
+                <th onclick="sortTable(4)">Страна происхождения</th> <!-- Заголовок столбца "Страна происхождения" с возможностью сортировки -->
+            </tr>
+        </thead>
+        <tbody></tbody> <!-- Пустой блок, куда будет добавляться информация из XML -->
+    </table>
+
+    <script>
+        // XML-данные как строка
+        const xmlData = `
+            <products>
+                <product>
+                    <name>Яблоки</name>
+                    <category>Фрукты</category>
+                    <price>120</price>
+                    <calories>52</calories>
+                    <origin>Россия</origin>
+                </product>
+                <product>
+                    <name>Молоко</name>
+                    <category>Молочные продукты</category>
+                    <price>70</price>
+                    <calories>42</calories>
+                    <origin>Беларусь</origin>
+                </product>
+                <product>
+                    <name>Рис</name>
+                    <category>Крупы</category>
+                    <price>90</price>
+                    <calories>130</calories>
+                    <origin>Китай</origin>
+                </product>
+                <product>
+                    <name>Картофель</name>
+                    <category>Овощи</category>
+                    <price>50</price>
+                    <calories>77</calories>
+                    <origin>Россия</origin>
+                </product>
+                <product>
+                    <name>Сыр</name>
+                    <category>Молочные продукты</category>
+                    <price>350</price>
+                    <calories>402</calories>
+                    <origin>Франция</origin>
+                </product>
+                <product>
+                    <name>Бананы</name>
+                    <category>Фрукты</category>
+                    <price>150</price>
+                    <calories>96</calories>
+                    <origin>Эквадор</origin>
+                </product>
+            </products>
+        `;
+
+        // Функция для парсинга XML-строки
+        function parseXML() {
+            const parser = new DOMParser(); // Создаем объект для разбора XML
+            return parser.parseFromString(xmlData, 'application/xml'); // Преобразуем строку XML в объект XML
+        }
+
+        // Функция для загрузки данных в таблицу
+        function loadData() {
+            const xmlDoc = parseXML(); // Получаем объект XML
+            const products = xmlDoc.getElementsByTagName('product'); // Выбираем все элементы <product>
+            const tbody = document.querySelector('#productTable tbody'); // Находим тело таблицы
+            tbody.innerHTML = ''; // Очищаем таблицу перед добавлением новых данных
+
+            for (let product of products) { // Проходим по каждому продукту
+                const row = document.createElement('tr'); // Создаем строку таблицы
+                row.innerHTML = `
+                    <td>${product.getElementsByTagName('name')[0].textContent}</td> <!-- Добавляем название продукта -->
+                    <td>${product.getElementsByTagName('category')[0].textContent}</td> <!-- Добавляем категорию -->
+                    <td>${product.getElementsByTagName('price')[0].textContent}</td> <!-- Добавляем цену -->
+                    <td>${product.getElementsByTagName('calories')[0].textContent}</td> <!-- Добавляем калории -->
+                    <td>${product.getElementsByTagName('origin')[0].textContent}</td> <!-- Добавляем страну происхождения -->
+                `;
+                tbody.appendChild(row); // Добавляем строку в таблицу
+            }
+        }
+
+        // Функция для сортировки таблицы
+        function sortTable(columnIndex) {
+            const table = document.getElementById('productTable'); // Находим таблицу
+            const rows = Array.from(table.tBodies[0].rows); // Преобразуем строки таблицы в массив
+            const isAscending = table.dataset.sortOrder !== 'asc'; // Определяем порядок сортировки
+            table.dataset.sortOrder = isAscending ? 'asc' : 'desc'; // Сохраняем текущий порядок сортировки
+
+            rows.sort((rowA, rowB) => { // Сортируем строки
+                const cellA = rowA.cells[columnIndex].textContent.trim(); // Получаем значение ячейки A
+                const cellB = rowB.cells[columnIndex].textContent.trim(); // Получаем значение ячейки B
+                return isAscending
+                    ? cellA.localeCompare(cellB, undefined, { numeric: true }) // Сравниваем значения в порядке возрастания
+                    : cellB.localeCompare(cellA, undefined, { numeric: true }); // Сравниваем значения в порядке убывания
+            });
+
+            rows.forEach(row => table.tBodies[0].appendChild(row)); // Добавляем отсортированные строки в таблицу
+        }
+
+        // Фильтрация таблицы по категории
+        document.getElementById('filter').addEventListener('input', function () {
+            const filterValue = this.value.toLowerCase(); // Преобразуем введенное значение в нижний регистр
+            const rows = document.querySelectorAll('#productTable tbody tr'); // Находим все строки таблицы
+
+            rows.forEach(row => { // Проходим по каждой строке
+                const category = row.cells[1].textContent.toLowerCase(); // Получаем категорию строки
+                row.style.display = category.includes(filterValue) ? '' : 'none'; // Скрываем или показываем строку
+            });
+        });
+
+        // Инициализация страницы
+        loadData(); // Загружаем данные в таблицу при открытии страницы
+    </script>
+</body>
+</html>
